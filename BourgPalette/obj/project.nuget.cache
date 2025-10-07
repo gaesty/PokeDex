@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "QqpAmTqk0Gw=",
+  "dgSpecHash": "PchJ1pmII7U=",
   "success": true,
   "projectFilePath": "C:\\Users\\gaeta\\Desktop\\PokeDex\\BourgPalette\\BourgPalette.csproj",
   "expectedPackageFiles": [
@@ -59,6 +59,8 @@
     "C:\\Users\\gaeta\\.nuget\\packages\\njsonschema.annotations\\11.5.1\\njsonschema.annotations.11.5.1.nupkg.sha512",
     "C:\\Users\\gaeta\\.nuget\\packages\\njsonschema.newtonsoftjson\\11.5.1\\njsonschema.newtonsoftjson.11.5.1.nupkg.sha512",
     "C:\\Users\\gaeta\\.nuget\\packages\\njsonschema.yaml\\11.5.1\\njsonschema.yaml.11.5.1.nupkg.sha512",
+    "C:\\Users\\gaeta\\.nuget\\packages\\npgsql\\9.0.3\\npgsql.9.0.3.nupkg.sha512",
+    "C:\\Users\\gaeta\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\9.0.4\\npgsql.entityframeworkcore.postgresql.9.0.4.nupkg.sha512",
     "C:\\Users\\gaeta\\.nuget\\packages\\nswag.annotations\\14.6.1\\nswag.annotations.14.6.1.nupkg.sha512",
     "C:\\Users\\gaeta\\.nuget\\packages\\nswag.aspnetcore\\14.6.1\\nswag.aspnetcore.14.6.1.nupkg.sha512",
     "C:\\Users\\gaeta\\.nuget\\packages\\nswag.core\\14.6.1\\nswag.core.14.6.1.nupkg.sha512",

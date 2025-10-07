@@ -1,20 +1,25 @@
+using BourgPalette.Data;
 using Microsoft.EntityFrameworkCore;
+using DomainPokemon = BourgPalette.Models.Pokemon;
+
 class Program
 {
     static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Database configuration: use SQLite by default so we can scaffold ORM now.
-        // You can switch to PostgreSQL later by adding the Npgsql provider and calling UseNpgsql.
-        var sqliteConn = builder.Configuration.GetConnectionString("Sqlite")
-                         ?? builder.Configuration["ConnectionStrings:Sqlite"]
-                         ?? "Data Source=pokedex.db";
+        builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
 
-    builder.Services.AddDbContext<PokedexDB>(opt => opt.UseSqlite(sqliteConn));
-    builder.Services.AddDbContext<BourgPalette.Data.ApplicationDbContext>(opt => opt.UseSqlite(sqliteConn));
+    var postgresConn = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
+                ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
+                ?? builder.Configuration.GetConnectionString("Postgres")
+                ?? "Host=localhost;Port=5434;Username=trainerUser;Password=pokedexPassword;Database=pokedex";
+
+    // Use only ApplicationDbContext
+    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(postgresConn));
+
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
+        builder.Services.AddHealthChecks();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddOpenApiDocument(config =>
         {
@@ -23,19 +28,34 @@ class Program
             config.Version = "v1";
         });
 
-    // Enable Swagger UI in Development or when explicitly enabled via configuration
-    var enableSwagger = builder.Environment.IsDevelopment() ||
-                builder.Configuration.GetValue<bool>("Swagger:Enabled");
+        var app = builder.Build();
 
-    var app = builder.Build();
+        using (var scope = app.Services.CreateScope())
+        {
+            var scopedServices = scope.ServiceProvider;
+            var logger = scopedServices.GetRequiredService<ILogger<Program>>();
+
+            var ormDb = scopedServices.GetRequiredService<ApplicationDbContext>();
+            try
+            {
+                ormDb.Database.Migrate();
+                logger.LogInformation("ApplicationDbContext migrations applied.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to apply migrations for ApplicationDbContext");
+            }
+        }
+
+        var enableSwagger = app.Environment.IsDevelopment() ||
+                             app.Configuration.GetValue<bool>("Swagger:Enabled");
 
     app.MapGet("/", () => "Welcome to the PokeDex API!");
 
-    app.MapGet("/health", async (PokedexDB db) =>
+        app.MapGet("/health", async (ApplicationDbContext db) =>
         {
             try
             {
-                // lightweight check: try simple query; for InMemory, this is instant
                 await db.Database.ExecuteSqlRawAsync("SELECT 1");
                 return Results.Ok("Healthy");
             }
@@ -45,11 +65,17 @@ class Program
             }
         });
 
-        app.MapGet("/dbinfo", async (BourgPalette.Data.ApplicationDbContext db) =>
+        app.MapGet("/dbinfo", async (ApplicationDbContext db) =>
         {
-            // Quick check: number of tables tracked (by EF model)
+            var canConnect = await db.Database.CanConnectAsync();
             var entityCount = db.Model.GetEntityTypes().Count();
-            return Results.Ok(new { Entities = entityCount });
+            var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+            return Results.Ok(new
+            {
+                Entities = entityCount,
+                CanConnect = canConnect,
+                PendingMigrations = pendingMigrations.ToArray()
+            });
         });
 
         app.MapGet("/ping", () => Results.Ok("pong"));
@@ -66,43 +92,42 @@ class Program
             });
         }
 
-        app.MapGet("/pokedex", async (PokedexDB db) =>
+    app.MapGet("/pokedex", async (ApplicationDbContext db) => await db.Pokemons.ToListAsync());
+
+        // Legendary filter isn't defined on the domain model; return all for now
+        app.MapGet("/pokedex/legendary", async (ApplicationDbContext db) =>
             await db.Pokemons.ToListAsync());
 
-        app.MapGet("/pokedex/legendary", async (PokedexDB db) =>
-            await db.Pokemons.Where(t => t.IsLegendary).ToListAsync());
+        app.MapGet("/pokedex/{id}", async (int id, ApplicationDbContext db) =>
+        {
+            var pokemon = await db.Pokemons.FindAsync(id);
+            return pokemon is DomainPokemon p
+                ? Results.Ok(p)
+                : Results.NotFound();
+        });
 
-        app.MapGet("/pokedex/{id}", async (int id, PokedexDB db) =>
-            await db.Pokemons.FindAsync(id)
-                is Pokemon pokemon
-                    ? Results.Ok(pokemon)
-                    : Results.NotFound());
-
-        app.MapPost("/pokedex", async (Pokemon pokemon, PokedexDB db) =>
+        app.MapPost("/pokedex", async (DomainPokemon pokemon, ApplicationDbContext db) =>
         {
             db.Pokemons.Add(pokemon);
             await db.SaveChangesAsync();
-
             return Results.Created($"/pokedex/{pokemon.Id}", pokemon);
         });
 
-        app.MapPut("/pokedex/{id}", async (int id, Pokemon inputPokemon, PokedexDB db) =>
+        app.MapPut("/pokedex/{id}", async (int id, DomainPokemon inputPokemon, ApplicationDbContext db) =>
         {
             var pokemon = await db.Pokemons.FindAsync(id);
 
             if (pokemon is null) return Results.NotFound();
 
-            pokemon.Name = inputPokemon.Name;
-            pokemon.IsLegendary = inputPokemon.IsLegendary;
-
+            // Copy over values from input to tracked entity
+            db.Entry(pokemon).CurrentValues.SetValues(inputPokemon);
             await db.SaveChangesAsync();
-
             return Results.NoContent();
         });
 
-        app.MapDelete("/pokedex/{id}", async (int id, PokedexDB db) =>
+        app.MapDelete("/pokedex/{id}", async (int id, ApplicationDbContext db) =>
         {
-            if (await db.Pokemons.FindAsync(id) is Pokemon pokemon)
+            if (await db.Pokemons.FindAsync(id) is DomainPokemon pokemon)
             {
                 db.Pokemons.Remove(pokemon);
                 await db.SaveChangesAsync();
@@ -113,6 +138,5 @@ class Program
         });
 
         app.Run();
-
     }
 }

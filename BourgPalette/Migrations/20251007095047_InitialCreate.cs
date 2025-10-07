@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -14,10 +15,10 @@ namespace BourgPalette.Migrations
                 name: "abilities",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -28,11 +29,11 @@ namespace BourgPalette.Migrations
                 name: "media",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    SpriteUrl = table.Column<string>(type: "TEXT", nullable: true),
-                    ArtworkUrl = table.Column<string>(type: "TEXT", nullable: true),
-                    Note = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    SpriteUrl = table.Column<string>(type: "text", nullable: true),
+                    ArtworkUrl = table.Column<string>(type: "text", nullable: true),
+                    Note = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -43,13 +44,13 @@ namespace BourgPalette.Migrations
                 name: "species",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    pokedex_number = table.Column<int>(type: "INTEGER", nullable: true),
-                    name_fr = table.Column<string>(type: "TEXT", nullable: true),
-                    name_en = table.Column<string>(type: "TEXT", nullable: true),
-                    Generation = table.Column<int>(type: "INTEGER", nullable: true),
-                    Region = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    pokedex_number = table.Column<int>(type: "integer", nullable: true),
+                    name_fr = table.Column<string>(type: "text", nullable: true),
+                    name_en = table.Column<string>(type: "text", nullable: true),
+                    Generation = table.Column<int>(type: "integer", nullable: true),
+                    Region = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -60,11 +61,11 @@ namespace BourgPalette.Migrations
                 name: "teams",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true),
-                    Owner = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    Owner = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -75,10 +76,10 @@ namespace BourgPalette.Migrations
                 name: "types",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,14 +90,14 @@ namespace BourgPalette.Migrations
                 name: "pokemon",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    species_id = table.Column<int>(type: "INTEGER", nullable: true),
-                    form = table.Column<string>(type: "TEXT", nullable: true),
-                    height = table.Column<double>(type: "REAL", nullable: true),
-                    weight = table.Column<double>(type: "REAL", nullable: true),
-                    base_experience = table.Column<int>(type: "INTEGER", nullable: true),
-                    image_id = table.Column<int>(type: "INTEGER", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    species_id = table.Column<int>(type: "integer", nullable: true),
+                    form = table.Column<string>(type: "text", nullable: true),
+                    height = table.Column<double>(type: "double precision", nullable: true),
+                    weight = table.Column<double>(type: "double precision", nullable: true),
+                    base_experience = table.Column<int>(type: "integer", nullable: true),
+                    image_id = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -117,15 +118,15 @@ namespace BourgPalette.Migrations
                 name: "moves",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true),
-                    type_id = table.Column<int>(type: "INTEGER", nullable: true),
-                    power = table.Column<int>(type: "INTEGER", nullable: true),
-                    accuracy = table.Column<double>(type: "REAL", nullable: true),
-                    pp = table.Column<int>(type: "INTEGER", nullable: true),
-                    category = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    type_id = table.Column<int>(type: "integer", nullable: true),
+                    power = table.Column<int>(type: "integer", nullable: true),
+                    accuracy = table.Column<double>(type: "double precision", nullable: true),
+                    pp = table.Column<int>(type: "integer", nullable: true),
+                    category = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -141,11 +142,11 @@ namespace BourgPalette.Migrations
                 name: "evolutions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    from_pokemon_id = table.Column<int>(type: "INTEGER", nullable: true),
-                    to_pokemon_id = table.Column<int>(type: "INTEGER", nullable: true),
-                    condition = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    from_pokemon_id = table.Column<int>(type: "integer", nullable: true),
+                    to_pokemon_id = table.Column<int>(type: "integer", nullable: true),
+                    condition = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -168,9 +169,9 @@ namespace BourgPalette.Migrations
                 name: "pokemon_abilities",
                 columns: table => new
                 {
-                    pokemon_id = table.Column<int>(type: "INTEGER", nullable: false),
-                    ability_id = table.Column<int>(type: "INTEGER", nullable: false),
-                    is_hidden = table.Column<bool>(type: "INTEGER", nullable: true)
+                    pokemon_id = table.Column<int>(type: "integer", nullable: false),
+                    ability_id = table.Column<int>(type: "integer", nullable: false),
+                    is_hidden = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -193,8 +194,8 @@ namespace BourgPalette.Migrations
                 name: "pokemon_types",
                 columns: table => new
                 {
-                    pokemon_id = table.Column<int>(type: "INTEGER", nullable: false),
-                    type_id = table.Column<int>(type: "INTEGER", nullable: false)
+                    pokemon_id = table.Column<int>(type: "integer", nullable: false),
+                    type_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -217,15 +218,15 @@ namespace BourgPalette.Migrations
                 name: "stats",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    pokemon_id = table.Column<int>(type: "INTEGER", nullable: true),
-                    hp = table.Column<int>(type: "INTEGER", nullable: true),
-                    attack = table.Column<int>(type: "INTEGER", nullable: true),
-                    defense = table.Column<int>(type: "INTEGER", nullable: true),
-                    special_attack = table.Column<int>(type: "INTEGER", nullable: true),
-                    special_defense = table.Column<int>(type: "INTEGER", nullable: true),
-                    speed = table.Column<int>(type: "INTEGER", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    pokemon_id = table.Column<int>(type: "integer", nullable: true),
+                    hp = table.Column<int>(type: "integer", nullable: true),
+                    attack = table.Column<int>(type: "integer", nullable: true),
+                    defense = table.Column<int>(type: "integer", nullable: true),
+                    special_attack = table.Column<int>(type: "integer", nullable: true),
+                    special_defense = table.Column<int>(type: "integer", nullable: true),
+                    speed = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -241,9 +242,9 @@ namespace BourgPalette.Migrations
                 name: "team_pokemons",
                 columns: table => new
                 {
-                    team_id = table.Column<int>(type: "INTEGER", nullable: false),
-                    pokemon_id = table.Column<int>(type: "INTEGER", nullable: false),
-                    slot = table.Column<int>(type: "INTEGER", nullable: true)
+                    team_id = table.Column<int>(type: "integer", nullable: false),
+                    pokemon_id = table.Column<int>(type: "integer", nullable: false),
+                    slot = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {

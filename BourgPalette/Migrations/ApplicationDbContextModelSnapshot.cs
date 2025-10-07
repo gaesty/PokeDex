@@ -3,6 +3,7 @@ using BourgPalette.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -14,19 +15,25 @@ namespace BourgPalette.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("BourgPalette.Models.Ability", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -37,18 +44,20 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Condition")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("text")
                         .HasColumnName("condition");
 
                     b.Property<int?>("FromPokemonId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("from_pokemon_id");
 
                     b.Property<int?>("ToPokemonId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("to_pokemon_id");
 
                     b.HasKey("Id");
@@ -64,16 +73,18 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArtworkUrl")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Note")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("SpriteUrl")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -84,32 +95,34 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<double?>("Accuracy")
-                        .HasColumnType("REAL")
+                        .HasColumnType("double precision")
                         .HasColumnName("accuracy");
 
                     b.Property<string>("Category")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("text")
                         .HasColumnName("category");
 
                     b.Property<string>("Description")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int?>("PP")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("pp");
 
                     b.Property<int?>("Power")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("power");
 
                     b.Property<int?>("TypeId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("type_id");
 
                     b.HasKey("Id");
@@ -123,30 +136,32 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("BaseExperience")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("base_experience");
 
                     b.Property<string>("Form")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("text")
                         .HasColumnName("form");
 
                     b.Property<double?>("Height")
-                        .HasColumnType("REAL")
+                        .HasColumnType("double precision")
                         .HasColumnName("height");
 
                     b.Property<int?>("ImageId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("image_id");
 
                     b.Property<int?>("SpeciesId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("species_id");
 
                     b.Property<double?>("Weight")
-                        .HasColumnType("REAL")
+                        .HasColumnType("double precision")
                         .HasColumnName("weight");
 
                     b.HasKey("Id");
@@ -161,15 +176,15 @@ namespace BourgPalette.Migrations
             modelBuilder.Entity("BourgPalette.Models.PokemonAbility", b =>
                 {
                     b.Property<int>("PokemonId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("pokemon_id");
 
                     b.Property<int>("AbilityId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("ability_id");
 
                     b.Property<bool?>("IsHidden")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_hidden");
 
                     b.HasKey("PokemonId", "AbilityId");
@@ -182,11 +197,11 @@ namespace BourgPalette.Migrations
             modelBuilder.Entity("BourgPalette.Models.PokemonType", b =>
                 {
                     b.Property<int>("PokemonId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("pokemon_id");
 
                     b.Property<int>("TypeId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("type_id");
 
                     b.HasKey("PokemonId", "TypeId");
@@ -200,25 +215,27 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("Generation")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("NameEn")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("text")
                         .HasColumnName("name_en");
 
                     b.Property<string>("NameFr")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("text")
                         .HasColumnName("name_fr");
 
                     b.Property<int?>("PokedexNumber")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("pokedex_number");
 
                     b.Property<string>("Region")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -229,34 +246,36 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("Attack")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("attack");
 
                     b.Property<int?>("Defense")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("defense");
 
                     b.Property<int?>("HP")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("hp");
 
                     b.Property<int?>("PokemonId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("pokemon_id");
 
                     b.Property<int?>("SpecialAttack")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("special_attack");
 
                     b.Property<int?>("SpecialDefense")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("special_defense");
 
                     b.Property<int?>("Speed")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("speed");
 
                     b.HasKey("Id");
@@ -270,16 +289,18 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Owner")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -289,15 +310,15 @@ namespace BourgPalette.Migrations
             modelBuilder.Entity("BourgPalette.Models.TeamPokemon", b =>
                 {
                     b.Property<int>("TeamId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("team_id");
 
                     b.Property<int>("PokemonId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("pokemon_id");
 
                     b.Property<int?>("Slot")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("slot");
 
                     b.HasKey("TeamId", "PokemonId");
@@ -311,13 +332,15 @@ namespace BourgPalette.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
