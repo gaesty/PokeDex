@@ -42,6 +42,9 @@
  - Run the file Program.cs
 `dotnet run`
 
+ - Build the file Program.cs
+`dotnet build`
+
  - Migrate database 
 `dotnet-ef migrations add InitialCreate`
 
