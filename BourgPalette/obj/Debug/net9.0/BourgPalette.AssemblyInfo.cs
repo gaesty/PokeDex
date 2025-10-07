@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+66af4007fb1eae0397629d40431c148d93bf6c28")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b5ecf94a61967eaa37f0ef91ac69463ed7f9acd")]
 [assembly: System.Reflection.AssemblyProductAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

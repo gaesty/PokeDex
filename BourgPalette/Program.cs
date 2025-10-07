@@ -1,6 +1,7 @@
 using BourgPalette.Data;
 using Microsoft.EntityFrameworkCore;
 using DomainPokemon = BourgPalette.Models.Pokemon;
+using BourgPalette.DTOs;
 
 class Program
 {
@@ -21,6 +22,7 @@ class Program
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         builder.Services.AddHealthChecks();
         builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddControllers();
         builder.Services.AddOpenApiDocument(config =>
         {
             config.DocumentName = "PokeDex API";
@@ -92,50 +94,7 @@ class Program
             });
         }
 
-    app.MapGet("/pokedex", async (ApplicationDbContext db) => await db.Pokemons.ToListAsync());
-
-        // Legendary filter isn't defined on the domain model; return all for now
-        app.MapGet("/pokedex/legendary", async (ApplicationDbContext db) =>
-            await db.Pokemons.ToListAsync());
-
-        app.MapGet("/pokedex/{id}", async (int id, ApplicationDbContext db) =>
-        {
-            var pokemon = await db.Pokemons.FindAsync(id);
-            return pokemon is DomainPokemon p
-                ? Results.Ok(p)
-                : Results.NotFound();
-        });
-
-        app.MapPost("/pokedex", async (DomainPokemon pokemon, ApplicationDbContext db) =>
-        {
-            db.Pokemons.Add(pokemon);
-            await db.SaveChangesAsync();
-            return Results.Created($"/pokedex/{pokemon.Id}", pokemon);
-        });
-
-        app.MapPut("/pokedex/{id}", async (int id, DomainPokemon inputPokemon, ApplicationDbContext db) =>
-        {
-            var pokemon = await db.Pokemons.FindAsync(id);
-
-            if (pokemon is null) return Results.NotFound();
-
-            // Copy over values from input to tracked entity
-            db.Entry(pokemon).CurrentValues.SetValues(inputPokemon);
-            await db.SaveChangesAsync();
-            return Results.NoContent();
-        });
-
-        app.MapDelete("/pokedex/{id}", async (int id, ApplicationDbContext db) =>
-        {
-            if (await db.Pokemons.FindAsync(id) is DomainPokemon pokemon)
-            {
-                db.Pokemons.Remove(pokemon);
-                await db.SaveChangesAsync();
-                return Results.Ok(pokemon);
-            }
-
-            return Results.NotFound();
-        });
+        app.MapControllers();
 
         app.Run();
     }
