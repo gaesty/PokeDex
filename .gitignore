@@ -1,0 +1,6 @@
+# Ignore environment files and other local artifacts
+.env
+.env.*
+# Docker
+**/.DS_Store
+**/Thumbs.db

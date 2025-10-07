@@ -1,0 +1,23 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.swp
+**/*.tmp
+**/*.log
+**/node_modules/
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+!BourgPalette/Dockerfile
+.dockerignore
+
+# Env files
+.env
+.env.*
