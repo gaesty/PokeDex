@@ -35,14 +35,26 @@
 
 [Tutorial API DotNet](https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-9.0&tabs=visual-studio-code)
 
+[Documentation EF Core](https://learn.microsoft.com/en-us/ef/core/get-started/overview/first-app?tabs=netcore-cli)
+
 ## DotNet
 
  - Run the file Program.cs
 `dotnet run`
 
+ - Migrate database 
+`dotnet-ef migrations add InitialCreate`
+
+ - Update database
+`dotnet-ef database update`
+
+## Database 
+
+![Diagram Database](Untitled.png)
 
 
-```
+
+<!-- ```
 // Pokémon DB - schéma DBML généré d'après la diapositive
 
 Table species {
@@ -156,4 +168,4 @@ Ref: evolutions.to_pokemon_id > pokemon.id
 Ref: team_pokemons.team_id > teams.id
 Ref: team_pokemons.pokemon_id > pokemon.id
 
-```
+``` -->
