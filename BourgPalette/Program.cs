@@ -11,6 +11,7 @@ using System.Text;
 using BourgPalette.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Prometheus;
 
 class Program
 {
@@ -144,7 +145,10 @@ class Program
             app.UseDeveloperExceptionPage();
         }
 
-        app.UseMiddleware<ErrorHandlingMiddleware>();
+    app.UseMiddleware<ErrorHandlingMiddleware>();
+    // Prometheus metrics: expose /metrics and instrument HTTP
+    app.UseMetricServer();
+    app.UseHttpMetrics();
 
         app.MapGet("/", () => "Welcome to the PokeDex API!");
         app.MapGet("/health", async (ApplicationDbContext db) =>

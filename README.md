@@ -40,6 +40,10 @@ Copier et coller l'URL du JSON dans l'importation de PostMan
 
 ![ScreenShot to get the JSON from Swagger](capture_20251009092558441.jpg)
 
+## Grafana
+ - Pour mettre à jour le mot de passe 
+`docker exec -ti grafana_container_name grafana-cli admin reset-admin-password new_password`
+
 ## Link
 
 [Tutorial Docker PostgreSQL](https://www.datacamp.com/tutorial/postgresql-docker?dc_referrer=https%3A%2F%2Fwww.google.com%2F)
@@ -49,6 +53,8 @@ Copier et coller l'URL du JSON dans l'importation de PostMan
 [Tutorial API DotNet](https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-9.0&tabs=visual-studio-code)
 
 [Documentation EF Core](https://learn.microsoft.com/en-us/ef/core/get-started/overview/first-app?tabs=netcore-cli)
+
+[Tutorial Prometheus + Grafana](https://signoz.io/guides/how-to-install-prometheus-and-grafana-on-docker/)
 
 ## DotNet
 

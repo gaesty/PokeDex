@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+625e7dcd1d85d1a89660fae83781fb5a153a50fd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5be87fa675f8dc7dca38ef2be15a6276cdbfc56e")]
 [assembly: System.Reflection.AssemblyProductAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
