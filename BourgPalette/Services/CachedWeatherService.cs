@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using BourgPalette.DTOs;
+using Prometheus;
 
 namespace BourgPalette.Services;
 
@@ -12,6 +13,20 @@ public class CachedWeatherService : IWeatherService
     private readonly WeatherService _inner;
     private readonly IDistributedCache _cache;
     private readonly ILogger<CachedWeatherService> _logger;
+
+    private static readonly Counter CacheGetsTotal = Metrics.CreateCounter(
+        "weather_cache_gets_total",
+        "Total number of cache get attempts for weather data",
+        new CounterConfiguration { LabelNames = new[] { "result" } });
+
+    private static readonly Counter CacheSetsTotal = Metrics.CreateCounter(
+        "weather_cache_sets_total",
+        "Total number of cache set operations for weather data",
+        new CounterConfiguration { LabelNames = new[] { "result" } });
+
+    private static readonly Gauge CacheLastTtlSeconds = Metrics.CreateGauge(
+        "weather_cache_last_ttl_seconds",
+        "TTL in seconds used for the last cached weather entry");
 
     public CachedWeatherService(WeatherService inner, IDistributedCache cache, ILogger<CachedWeatherService> logger)
     {
@@ -31,12 +46,18 @@ public class CachedWeatherService : IWeatherService
             {
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var fromCache = JsonSerializer.Deserialize<List<WeatherSummaryDto>>(cached, options);
-                if (fromCache != null) return fromCache;
+                if (fromCache != null)
+                {
+                    CacheGetsTotal.WithLabels("hit").Inc();
+                    return fromCache;
+                }
             }
+            CacheGetsTotal.WithLabels("miss").Inc();
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Redis get failed for key {Key}", key);
+            CacheGetsTotal.WithLabels("error").Inc();
         }
 
         var fresh = await _inner.GetCurrentAsync(list, ct);
@@ -44,14 +65,15 @@ public class CachedWeatherService : IWeatherService
         try
         {
             var json = JsonSerializer.Serialize(fresh);
-            await _cache.SetStringAsync(key, json, new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-            }, ct);
+            var ttl = TimeSpan.FromMinutes(5);
+            await _cache.SetStringAsync(key, json, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl }, ct);
+            CacheSetsTotal.WithLabels("ok").Inc();
+            CacheLastTtlSeconds.Set(ttl.TotalSeconds);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Redis set failed for key {Key}", key);
+            CacheSetsTotal.WithLabels("error").Inc();
         }
 
         return fresh;

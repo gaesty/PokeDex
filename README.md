@@ -46,6 +46,82 @@ Copier et coller l'URL du JSON dans l'importation de PostMan
 
 ## Link
 
+## 📈 Metrics (Prometheus + Grafana)
+
+L'API expose des métriques Prometheus via `prometheus-net`.
+
+- Endpoint métriques: `http://localhost:8080/metrics`
+- Prometheus scrape (déjà configuré): job `API` vers `api:8080` dans `prometheus.yml`
+- Grafana: connectez la datasource à `http://prometheus:9090`
+
+Métriques disponibles:
+- Requêtes HTTP ASP.NET Core (automatique):
+    - `http_requests_received_total{code,method,controller,action}`
+    - `http_request_duration_seconds_bucket{le,code,method,controller,action}` (+ `_sum`, `_count`)
+- Processus et .NET (automatique): `process_*`, `dotnet_*`
+- Météo (custom):
+    - `weather_external_requests_total{outcome="ok|error"}`
+    - `weather_external_request_duration_seconds_bucket{le}` (+ `_sum`, `_count`)
+    - `weather_last_result_count`
+    - `weather_cache_gets_total{result="hit|miss|error"}`
+    - `weather_cache_sets_total{result="ok|error"}`
+    - `weather_cache_last_ttl_seconds`
+
+Notes:
+- Le job `PSQL` dans `prometheus.yml` ne collecte rien par défaut (Postgres n'expose pas de métriques). Utilisez un exporter (p. ex. `prometheuscommunity/postgres-exporter`) et scrappez cet exporter.
+
+### PromQL – exemples utiles (Prometheus et Grafana)
+
+- Débit global (RPS) de l'API:
+    - `sum(rate(http_requests_received_total[5m]))`
+
+- RPS par endpoint (selon labels disponibles):
+    - `sum(rate(http_requests_received_total[5m])) by (controller,action)`
+
+- Taux d'erreur (non-2xx):
+    - `sum(rate(http_requests_received_total{code!~"2.."}[5m]))`
+
+- P95 latence globale (s):
+    - `histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))`
+
+- P95 latence par endpoint:
+    - `histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, controller, action))`
+
+- CPU du processus API:
+    - `rate(process_cpu_seconds_total[5m])`
+
+- Mémoire RSS (octets):
+    - `process_working_set_bytes`
+
+- Appels sortants météo – taux et erreurs:
+    - Taux: `sum(rate(weather_external_requests_total[5m])) by (outcome)`
+    - Erreur (%): `100 * sum(rate(weather_external_requests_total{outcome="error"}[5m])) / sum(rate(weather_external_requests_total[5m]))`
+
+- P95 latence API météo (s):
+    - `histogram_quantile(0.95, sum(rate(weather_external_request_duration_seconds_bucket[5m])) by (le))`
+
+- Cache météo – hit ratio:
+    - `sum(rate(weather_cache_gets_total{result="hit"}[5m])) / sum(rate(weather_cache_gets_total[5m]))`
+
+- TTL du dernier cache (s):
+    - `weather_cache_last_ttl_seconds`
+
+### Idées de panneaux Grafana
+
+- Stat (unités: req/s): `sum(rate(http_requests_received_total[5m]))`
+- Stat (%): Erreurs: `100 * sum(rate(http_requests_received_total{code!~"2.."}[5m])) / sum(rate(http_requests_received_total[5m]))`
+- Graph (s): P95 latence globale: `histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))`
+- Graph (stacked): RPS par endpoint: `sum(rate(http_requests_received_total[5m])) by (controller,action)`
+- Barre/Donut: Hit/Miss cache: `sum(rate(weather_cache_gets_total[5m])) by (result)`
+- Graph: P95 météo externe: `histogram_quantile(0.95, sum(rate(weather_external_request_duration_seconds_bucket[5m])) by (le))`
+
+### Dépannage rapide
+
+- `http://localhost:9090/targets` → vérifiez que `API` est `UP`.
+- Grafana → Datasource Prometheus doit pointer vers `http://prometheus:9090` (pas `localhost`).
+- Si le job `PSQL` est `DOWN`, ajoutez un exporter Postgres ou supprimez le job.
+
+
 [Tutorial Docker PostgreSQL](https://www.datacamp.com/tutorial/postgresql-docker?dc_referrer=https%3A%2F%2Fwww.google.com%2F)
 
 [Documentation Docker HealthCheck](https://docs.docker.com/reference/dockerfile/#healthcheck)

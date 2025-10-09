@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using BourgPalette.DTOs;
+using Prometheus;
 
 namespace BourgPalette.Services;
 
@@ -13,6 +14,24 @@ public interface IWeatherService
 public class WeatherService : IWeatherService
 {
     private readonly HttpClient _http;
+    // Metrics
+    private static readonly Counter ExternalRequestsTotal = Metrics.CreateCounter(
+        "weather_external_requests_total",
+        "Total number of external weather API requests",
+        new CounterConfiguration { LabelNames = new[] { "outcome" } });
+
+    private static readonly Histogram ExternalRequestDuration = Metrics.CreateHistogram(
+        "weather_external_request_duration_seconds",
+        "Duration of external weather API requests",
+        new HistogramConfiguration
+        {
+            // Exponential buckets from 50ms to ~25s
+            Buckets = Histogram.ExponentialBuckets(start: 0.05, factor: 2, count: 10)
+        });
+
+    private static readonly Gauge LastResultCount = Metrics.CreateGauge(
+        "weather_last_result_count",
+        "Number of weather results returned by the last external weather API call");
     public WeatherService(HttpClient http)
     {
         _http = http;
@@ -26,10 +45,19 @@ public class WeatherService : IWeatherService
         var longitudes = string.Join(',', coords.Select(c => c.lon.ToString(System.Globalization.CultureInfo.InvariantCulture)));
 
         var url = $"v1/forecast?latitude={latitudes}&longitude={longitudes}&models=meteofrance_seamless&current=temperature_2m,precipitation,weather_code";
-
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        using var duration = ExternalRequestDuration.NewTimer();
         using var res = await _http.SendAsync(req, ct);
-        res.EnsureSuccessStatusCode();
+        try
+        {
+            res.EnsureSuccessStatusCode();
+            ExternalRequestsTotal.WithLabels("ok").Inc();
+        }
+        catch
+        {
+            ExternalRequestsTotal.WithLabels("error").Inc();
+            throw;
+        }
 
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var json = await res.Content.ReadAsStringAsync(ct);
@@ -73,7 +101,7 @@ public class WeatherService : IWeatherService
             }
         }
 
-        return items.Select(i => new WeatherSummaryDto
+        var mapped = items.Select(i => new WeatherSummaryDto
         {
             Latitude = i.Latitude,
             Longitude = i.Longitude,
@@ -82,6 +110,9 @@ public class WeatherService : IWeatherService
             PrecipitationMm = i.Current?.Precipitation,
             WeatherCode = i.Current?.WeatherCode
         }).ToList();
+
+        LastResultCount.Set(mapped.Count);
+        return mapped;
     }
 
     public TypeMultipliersDto ComputeMultipliers(WeatherSummaryDto w)
