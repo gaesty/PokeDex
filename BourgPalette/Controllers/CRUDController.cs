@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using BourgPalette.Data;
 using BourgPalette.Models;
 using BourgPalette.DTOs;
@@ -22,6 +23,7 @@ namespace BourgPalette.Controllers
 
         // GET api/pokedex
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetPokedex([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
         {
             if (page <= 0) page = 1;
@@ -67,6 +69,7 @@ namespace BourgPalette.Controllers
 
         // GET api/pokedex/{id}
         [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken ct = default)
         {
             var p = await _db.Pokemons.Include(x => x.Species).FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -88,6 +91,7 @@ namespace BourgPalette.Controllers
 
         // POST api/pokedex
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] PokemonCreateDto input, CancellationToken ct = default)
         {
             var errors = new Dictionary<string, string[]>();
@@ -117,6 +121,7 @@ namespace BourgPalette.Controllers
 
         // PUT api/pokedex/{id}
         [HttpPut("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] PokemonUpdateDto input, CancellationToken ct = default)
         {
             var entity = await _db.Pokemons.FindAsync(new object?[] { id }, ct);
@@ -144,6 +149,7 @@ namespace BourgPalette.Controllers
 
         // DELETE api/pokedex/{id}
         [HttpDelete("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken ct = default)
         {
             var entity = await _db.Pokemons.FindAsync(new object?[] { id }, ct);

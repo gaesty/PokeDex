@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("11b2bea6-0a6e-4319-bfa6-9cac4003fd4e")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b5ecf94a61967eaa37f0ef91ac69463ed7f9acd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+624e0b1055fff8698bcbe1eb1a79b6aee8618fef")]
 [assembly: System.Reflection.AssemblyProductAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BourgPalette")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

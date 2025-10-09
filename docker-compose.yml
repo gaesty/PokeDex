@@ -51,6 +51,8 @@ services:
     environment:
       # Use the Docker service DNS name and container port for DB connectivity inside the network
       POSTGRES_CONNECTION_STRING: "Host=pokedex-db;Port=5432;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=${POSTGRES_DB}"
+      # JWT settings for the API (keep secret out of the image; provide via .env)
+      JWT__secret: "${JWT__secret}"
       # Optional: enable Swagger UI even outside Development
       Swagger__Enabled: "true"
     healthcheck:

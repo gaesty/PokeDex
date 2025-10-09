@@ -2,33 +2,93 @@ using BourgPalette.Data;
 using Microsoft.EntityFrameworkCore;
 using DomainPokemon = BourgPalette.Models.Pokemon;
 using BourgPalette.DTOs;
+using BourgPalette.Middleware;
+using Microsoft.AspNetCore.Identity;
+using BourgPalette.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Logging.AddSimpleConsole(c => c.SingleLine = true);
 
-    var postgresConn = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
-                ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
-                ?? builder.Configuration.GetConnectionString("Postgres")
-                ?? "Host=localhost;Port=5434;Username=trainerUser;Password=pokedexPassword;Database=pokedex";
+        var postgresConn = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
+                    ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
+                    ?? builder.Configuration.GetConnectionString("Postgres")
+                    ?? "Host=localhost;Port=5434;Username=trainerUser;Password=pokedexPassword;Database=pokedex";
 
-    // Use only ApplicationDbContext
-    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(postgresConn));
+        // DbContext & Identity (single context)
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(postgresConn));
+        builder.Services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        // JWT Authentication
+        var jwtSecret = builder.Configuration["JWT:secret"];
+        if (string.IsNullOrWhiteSpace(jwtSecret))
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                jwtSecret = Guid.NewGuid().ToString("N");
+            }
+            else
+            {
+                throw new InvalidOperationException("JWT:secret is not configured. Use user-secrets or environment variable JWT__secret.");
+            }
+        }
+
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidAudience = builder.Configuration["JWT:ValidAudience"],
+                    ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+                    ClockSkew = TimeSpan.Zero,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+                };
+            });
 
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         builder.Services.AddHealthChecks();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddControllers();
+        builder.Services.AddAuthorization();
         builder.Services.AddOpenApiDocument(config =>
         {
             config.DocumentName = "PokeDex API";
             config.Title = "PokeDex API v1";
             config.Version = "v1";
+            // Add JWT bearer auth to Swagger UI
+            config.AddSecurity("JWT", Enumerable.Empty<string>(), new NSwag.OpenApiSecurityScheme
+            {
+                Type = NSwag.OpenApiSecuritySchemeType.ApiKey,
+                Name = "Authorization",
+                In = NSwag.OpenApiSecurityApiKeyLocation.Header,
+                Description = "Type into the textbox: Bearer {your JWT token}."
+            });
+            config.OperationProcessors.Add(new NSwag.Generation.Processors.Security.AspNetCoreOperationSecurityScopeProcessor("JWT"));
         });
+
+        // Middleware
+        builder.Services.AddTransient<ErrorHandlingMiddleware>();
+        // Services
+        builder.Services.AddScoped<BourgPalette.Services.ITokenService, BourgPalette.Services.TokenService>();
 
         var app = builder.Build();
 
@@ -52,8 +112,14 @@ class Program
         var enableSwagger = app.Environment.IsDevelopment() ||
                              app.Configuration.GetValue<bool>("Swagger:Enabled");
 
-    app.MapGet("/", () => "Welcome to the PokeDex API!");
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
 
+        app.UseMiddleware<ErrorHandlingMiddleware>();
+
+        app.MapGet("/", () => "Welcome to the PokeDex API!");
         app.MapGet("/health", async (ApplicationDbContext db) =>
         {
             try
@@ -66,7 +132,6 @@ class Program
                 return Results.Problem($"Unhealthy: {ex.Message}", statusCode: 503);
             }
         });
-
         app.MapGet("/dbinfo", async (ApplicationDbContext db) =>
         {
             var canConnect = await db.Database.CanConnectAsync();
@@ -79,7 +144,6 @@ class Program
                 PendingMigrations = pendingMigrations.ToArray()
             });
         });
-
         app.MapGet("/ping", () => Results.Ok("pong"));
 
         if (enableSwagger)
@@ -93,6 +157,11 @@ class Program
                 config.DocExpansion = "list";
             });
         }
+
+        await DbSeeder.SeedData(app);
+
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapControllers();
 

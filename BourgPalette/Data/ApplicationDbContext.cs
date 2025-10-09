@@ -1,9 +1,10 @@
 using BourgPalette.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace BourgPalette.Data;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -19,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<BourgPalette.Models.Evolution> Evolutions => Set<BourgPalette.Models.Evolution>();
     public DbSet<BourgPalette.Models.Team> Teams => Set<BourgPalette.Models.Team>();
     public DbSet<BourgPalette.Models.TeamPokemon> TeamPokemons => Set<BourgPalette.Models.TeamPokemon>();
+    public DbSet<TokenInfo> TokenInfos => Set<TokenInfo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -26,6 +26,15 @@
   - Up and Build Docker-Compose
 `docker compose up --build`
 
+   - Environment required for Docker (placed in `.env` at repo root):
+  ```
+  POSTGRES_USER=trainerUser
+  POSTGRES_PASSWORD=pokedexPassword
+  POSTGRES_DB=pokedex
+  # JWT secret used by the API (use a strong random value in prod)
+  JWT__secret=dev-super-secret-change-me
+  ```
+
 
 ## Link
 
@@ -46,12 +55,24 @@
 `dotnet build`
 
  - Migrate database 
-`dotnet-ef migrations add InitialCreate`
+`dotnet-ef migrations add {Name}`
 
  - Update database
 `dotnet-ef database update`
 
+ - Migrate the database with context
+`dotnet-ef migrations add MergeUnifiedContext --project "c:\Users\gaeta\Desktop\PokeDex\BourgPalette" --startup-project "c:\Users\gaeta\Desktop\PokeDex\BourgPalette" --context BourgPalette.Data.ApplicationDbContext`
+
+ - Update the database with context 
+`dotnet-ef database update --project "c:\Users\gaeta\Desktop\PokeDex\BourgPalette" --startup-project "c:\Users\gaeta\Desktop\PokeDex\BourgPalette" --context BourgPalette.Data.ApplicationDbContext`
+
 ## Database 
+
+ - Populate the Database 
+`docker cp .\docker_ressources\01-schema.sql pokedex-pokedex-db-1:/tmp/01-schema.sql`
+`docker cp .\docker_ressources\01-schema.sql pokedex-pokedex-db-1:/tmp/02-seed.sql`
+`docker exec -i pokedex-pokedex-db-1 psql -U trainerUser -d pokedex -v ON_ERROR_STOP=1 -f /tmp/01-schema.sql`
+`docker exec -i pokedex-pokedex-db-1 psql -U trainerUser -d pokedex -v ON_ERROR_STOP=1 -f /tmp/02-seed.sql`
 
 ![Diagram Database](Untitled.png)
 
