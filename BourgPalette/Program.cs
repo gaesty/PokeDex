@@ -8,6 +8,9 @@ using BourgPalette.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using BourgPalette.Services;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
 
 class Program
 {
@@ -26,7 +29,6 @@ class Program
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(postgresConn));
         builder.Services.AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
         // JWT Authentication
@@ -91,8 +93,29 @@ class Program
 
         // Middleware
         builder.Services.AddTransient<ErrorHandlingMiddleware>();
-        // Services
+    // Services
         builder.Services.AddScoped<BourgPalette.Services.ITokenService, BourgPalette.Services.TokenService>();
+        builder.Services.AddHttpClient<WeatherService>();
+        // Redis cache: configuration via REDIS_CONNECTION or appsettings (fallback to in-memory if not set)
+        var redisConn = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? builder.Configuration["Redis:Connection"];
+        if (!string.IsNullOrWhiteSpace(redisConn))
+        {
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConn;
+                options.InstanceName = builder.Configuration["Redis:InstanceName"] ?? "pokedex:";
+            });
+        }
+        else
+        {
+            builder.Services.AddDistributedMemoryCache();
+        }
+        builder.Services.AddScoped<IWeatherService>(sp =>
+        {
+            var inner = sp.GetRequiredService<WeatherService>();
+            var cache = sp.GetRequiredService<IDistributedCache>();
+            return new CachedWeatherService(inner, cache, sp.GetRequiredService<ILogger<CachedWeatherService>>());
+        });
 
         var app = builder.Build();
 

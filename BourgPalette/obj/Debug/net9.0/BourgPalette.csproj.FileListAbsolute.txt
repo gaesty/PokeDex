@@ -208,3 +208,6 @@ C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\Microsoft.AspNetCor
 C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
 C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\Microsoft.Extensions.Identity.Core.dll
 C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\Microsoft.Extensions.Identity.Stores.dll
+C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
+C:\Users\gaeta\Desktop\PokeDex\BourgPalette\bin\Debug\net9.0\StackExchange.Redis.dll

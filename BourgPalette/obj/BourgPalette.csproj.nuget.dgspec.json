@@ -78,6 +78,10 @@
               "target": "Package",
               "version": "[9.0.9, )"
             },
+            "Microsoft.Extensions.Caching.StackExchangeRedis": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
             "NSwag.AspNetCore": {
               "target": "Package",
               "version": "[14.6.1, )"
