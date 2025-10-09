@@ -17,20 +17,17 @@ namespace BourgPalette.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ILogger<AuthController> _logger;
     private readonly ITokenService _tokenService;
     private readonly ApplicationDbContext _context;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager,
         ILogger<AuthController> logger,
         ITokenService tokenService,
         ApplicationDbContext context)
     {
         _userManager = userManager;
-        _roleManager = roleManager;
         _logger = logger;
         _tokenService = tokenService;
         _context = context;
@@ -43,25 +40,18 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Signup([FromBody] SignupModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
         try
         {
-            var existingUser = await _userManager.FindByNameAsync(model.Email);
-            if (existingUser != null)
+            var existingUser = await _userManager.FindByNameAsync(model.Email) ?? await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser is not null)
             {
                 return BadRequest("User already exists");
             }
 
-            // Ensure default role exists
-            if (!await _roleManager.RoleExistsAsync(Roles.User))
-            {
-                var roleResult = await _roleManager.CreateAsync(new IdentityRole(Roles.User));
-                if (!roleResult.Succeeded)
-                {
-                    var roleErrors = string.Join(",", roleResult.Errors.Select(e => e.Description));
-                    _logger.LogError("Failed to create user role. Errors: {Errors}", roleErrors);
-                    return BadRequest($"Failed to create user role. Errors : {roleErrors}");
-                }
-            }
 
             var user = new ApplicationUser
             {
@@ -80,12 +70,7 @@ public class AuthController : ControllerBase
                 return BadRequest($"Failed to create user. Errors: {errors}");
             }
 
-            var addUserToRoleResult = await _userManager.AddToRoleAsync(user, Roles.User);
-            if (!addUserToRoleResult.Succeeded)
-            {
-                var errors = string.Join(",", addUserToRoleResult.Errors.Select(e => e.Description));
-                _logger.LogError("Failed to add role to the user. Errors : {Errors}", errors);
-            }
+            // Roles removed per request – no assignment
 
             return CreatedAtAction(nameof(Signup), null);
         }
@@ -102,9 +87,14 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
         try
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
+            // Accept either username or email in the same field for convenience
+            var user = await _userManager.FindByNameAsync(model.Username) ?? await _userManager.FindByEmailAsync(model.Username);
             if (user == null)
             {
                 return BadRequest("User with this username is not registered with us.");
@@ -113,7 +103,7 @@ public class AuthController : ControllerBase
             var isValidPassword = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!isValidPassword)
             {
-                return Unauthorized("iciiiii");
+                return Unauthorized("Invalid credentials");
             }
 
             var authClaims = new List<Claim>
@@ -122,11 +112,7 @@ public class AuthController : ControllerBase
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var userRoles = await _userManager.GetRolesAsync(user);
-            foreach (var userRole in userRoles)
-            {
-                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-            }
+            // Roles removed – no role claims added
 
             var accessToken = _tokenService.GenerateAccessToken(authClaims);
             var refreshToken = _tokenService.GenerateRefreshToken();
@@ -201,13 +187,28 @@ public class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-    
-    [HttpPost]
-    [Authorize(Roles = Roles.Admin)]
-    public IActionResult Post()
+
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Me()
     {
-        return Ok();
-    } 
+        var username = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(username)) return Unauthorized();
+        var user = await _userManager.FindByNameAsync(username) ?? await _userManager.FindByEmailAsync(username);
+        if (user is null) return Unauthorized();
+        var roles = await _userManager.GetRolesAsync(user);
+        return Ok(new
+        {
+            user.Id,
+            user.UserName,
+            user.Email,
+            user.Name,
+            Roles = roles
+        });
+    }
+    
+    // Removed admin-only test endpoint (roles disabled)
 
     [HttpPost("token/revoke")]
     [Authorize]

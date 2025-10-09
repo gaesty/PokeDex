@@ -16,20 +16,6 @@ public static class DbSeeder
         try
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-            // Create Admin role if missing
-            if (!await roleManager.RoleExistsAsync(Roles.Admin))
-            {
-                logger.LogInformation("Creating role {Role}", Roles.Admin);
-                var roleResult = await roleManager.CreateAsync(new IdentityRole(Roles.Admin));
-                if (!roleResult.Succeeded)
-                {
-                    var errs = string.Join(", ", roleResult.Errors.Select(e => e.Description));
-                    logger.LogError("Failed to create role {Role}. Errors: {Errors}", Roles.Admin, errs);
-                    return;
-                }
-            }
 
             // Seed default admin user if no users exist
             if (!userManager.Users.Any())
@@ -51,15 +37,7 @@ public static class DbSeeder
                     return;
                 }
 
-                var addUserToRoleResult = await userManager.AddToRoleAsync(user, Roles.Admin);
-                if (!addUserToRoleResult.Succeeded)
-                {
-                    var errs = string.Join(", ", addUserToRoleResult.Errors.Select(e => e.Description));
-                    logger.LogError("Failed to add user to role {Role}. Errors: {Errors}", Roles.Admin, errs);
-                    return;
-                }
-
-                logger.LogInformation("Admin user created with role {Role}", Roles.Admin);
+                logger.LogInformation("Admin user created (roles disabled)");
             }
         }
         catch (Exception ex)

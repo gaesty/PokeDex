@@ -35,6 +35,10 @@
   JWT__secret=dev-super-secret-change-me
   ```
 
+## Collection PostMan
+Copier et coller l'URL du JSON dans l'importation de PostMan
+
+![ScreenShot to get the JSON from Swagger](capture_20251009092558441.jpg)
 
 ## Link
 
@@ -193,3 +197,51 @@ Ref: team_pokemons.team_id > teams.id
 Ref: team_pokemons.pokemon_id > pokemon.id
 
 ``` -->
+
+<!-- API .NET 9 sécurisée (JWT + Identity) pour gérer un Pokédex.
+Flux d’authentification:
+Signup (crée un utilisateur et rôle User si absent)
+Login (retourne accessToken + refreshToken)
+Refresh (renouvelle le couple de tokens)
+
+Tous les endpoints métier exigent Authorization: Bearer {accessToken}.
+Ressources principales (CRUD):
+/api/pokedex (Pokémon + pagination + recherche)
+/api/abilities
+/api/moves
+/api/media
+/api/teams (+ gestion des membres: add/remove)
+/health (diagnostic)
+/dbinfo (infos techniques)
+
+Modèle token:
+accessToken: JWT court (Authorization)
+refreshToken: chaîne persistée (table TokenInfos)
+
+Étapes d’usage:
+POST /api/auth/signup (une seule fois)
+POST /api/auth/login → copier accessToken
+Dans Postman: Auth type = Bearer Token
+Appeler les endpoints CRUD
+Lorsque 401/expired: POST /api/auth/token/refresh
+
+Variables d’environnement suggérées:
+baseUrl = http://localhost:8080
+accessToken = (mis à jour après login)
+refreshToken = (mis à jour après login)
+
+Codes retour:
+200 OK / 201 Created / 204 NoContent
+400 Validation
+401 Token manquant/invalide
+404 Ressource absente
+409 Conflit
+500 Erreur interne (ProblemDetails)
+
+Sécurité:
+Changer JWT__secret en production
+Révoquer/rotate refresh tokens si compromis
+
+
+
+ -->

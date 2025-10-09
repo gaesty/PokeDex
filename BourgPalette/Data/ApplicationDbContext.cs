@@ -110,6 +110,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         // Column names alignment
         modelBuilder.Entity<BourgPalette.Models.Species>(e =>
         {
+            e.Property(p => p.Id).HasColumnName("id");
             e.Property(p => p.PokedexNumber).HasColumnName("pokedex_number");
             e.Property(p => p.NameFr).HasColumnName("name_fr");
             e.Property(p => p.NameEn).HasColumnName("name_en");
@@ -117,12 +118,35 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<BourgPalette.Models.Pokemon>(e =>
         {
+            e.Property(p => p.Id).HasColumnName("id");
             e.Property(p => p.SpeciesId).HasColumnName("species_id");
             e.Property(p => p.Form).HasColumnName("form");
             e.Property(p => p.Height).HasColumnName("height");
             e.Property(p => p.Weight).HasColumnName("weight");
             e.Property(p => p.BaseExperience).HasColumnName("base_experience");
             e.Property(p => p.ImageId).HasColumnName("image_id");
+        });
+
+        modelBuilder.Entity<BourgPalette.Models.Media>(e =>
+        {
+            e.Property(p => p.Id).HasColumnName("id");
+            e.Property(p => p.SpriteUrl).HasColumnName("sprite_url");
+            e.Property(p => p.ArtworkUrl).HasColumnName("artwork_url");
+            e.Property(p => p.Note).HasColumnName("note");
+        });
+
+        modelBuilder.Entity<BourgPalette.Models.TypeDefinition>(e =>
+        {
+            e.Property(p => p.Id).HasColumnName("id");
+            e.Property(p => p.Name).HasColumnName("name");
+            e.Property(p => p.Description).HasColumnName("description");
+        });
+
+        modelBuilder.Entity<BourgPalette.Models.Ability>(e =>
+        {
+            e.Property(p => p.Id).HasColumnName("id");
+            e.Property(p => p.Name).HasColumnName("name");
+            e.Property(p => p.Description).HasColumnName("description");
         });
 
         modelBuilder.Entity<BourgPalette.Models.PokemonType>(e =>
@@ -140,6 +164,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<BourgPalette.Models.Move>(e =>
         {
+            e.Property(m => m.Id).HasColumnName("id");
             e.Property(m => m.TypeId).HasColumnName("type_id");
             e.Property(m => m.Power).HasColumnName("power");
             e.Property(m => m.Accuracy).HasColumnName("accuracy");
@@ -149,6 +174,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<BourgPalette.Models.Stat>(e =>
         {
+            e.Property(s => s.Id).HasColumnName("id");
             e.Property(s => s.PokemonId).HasColumnName("pokemon_id");
             e.Property(s => s.HP).HasColumnName("hp");
             e.Property(s => s.Attack).HasColumnName("attack");
@@ -160,6 +186,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<BourgPalette.Models.Evolution>(e =>
         {
+            e.Property(p => p.Id).HasColumnName("id");
             e.Property(p => p.FromPokemonId).HasColumnName("from_pokemon_id");
             e.Property(p => p.ToPokemonId).HasColumnName("to_pokemon_id");
             e.Property(p => p.Condition).HasColumnName("condition");
@@ -170,6 +197,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.Property(p => p.TeamId).HasColumnName("team_id");
             e.Property(p => p.PokemonId).HasColumnName("pokemon_id");
             e.Property(p => p.Slot).HasColumnName("slot");
+        });
+
+        modelBuilder.Entity<BourgPalette.Models.Team>(e =>
+        {
+            e.Property(t => t.Id).HasColumnName("id");
+            e.Property(t => t.Name).HasColumnName("name");
+            e.Property(t => t.Description).HasColumnName("description");
+            e.Property(t => t.Owner).HasColumnName("owner");
         });
     }
 }

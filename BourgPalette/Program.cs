@@ -36,6 +36,8 @@ class Program
             if (builder.Environment.IsDevelopment())
             {
                 jwtSecret = Guid.NewGuid().ToString("N");
+                // Inject generated dev secret back into configuration so TokenService sees it
+                builder.Configuration["JWT:secret"] = jwtSecret;
             }
             else
             {
@@ -57,6 +59,7 @@ class Program
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
                     ValidAudience = builder.Configuration["JWT:ValidAudience"],
                     ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
                     ClockSkew = TimeSpan.Zero,
@@ -74,13 +77,14 @@ class Program
             config.DocumentName = "PokeDex API";
             config.Title = "PokeDex API v1";
             config.Version = "v1";
-            // Add JWT bearer auth to Swagger UI
-            config.AddSecurity("JWT", Enumerable.Empty<string>(), new NSwag.OpenApiSecurityScheme
+            // Proper HTTP Bearer scheme so Postman & Swagger UI handle "Bearer" prefix automatically
+            config.AddSecurity("JWT", Array.Empty<string>(), new NSwag.OpenApiSecurityScheme
             {
-                Type = NSwag.OpenApiSecuritySchemeType.ApiKey,
-                Name = "Authorization",
+                Type = NSwag.OpenApiSecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
                 In = NSwag.OpenApiSecurityApiKeyLocation.Header,
-                Description = "Type into the textbox: Bearer {your JWT token}."
+                Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer eyJhbGciOiJI...'"
             });
             config.OperationProcessors.Add(new NSwag.Generation.Processors.Security.AspNetCoreOperationSecurityScopeProcessor("JWT"));
         });
