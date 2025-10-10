@@ -5,6 +5,7 @@ using BourgPalette.Data;
 using BourgPalette.Models;
 using BourgPalette.DTOs;
 using PokemonEntity = BourgPalette.Models.Pokemon;
+using BourgPalette.Metrics;
 
 namespace BourgPalette.Controllers
 {
@@ -46,6 +47,7 @@ namespace BourgPalette.Controllers
             }
 
             var total = await query.CountAsync(ct);
+            AppMetrics.NumberTotalPokemon.Inc(total);
             var items = await query
                 .OrderBy(p => p.Id)
                 .Skip((page - 1) * pageSize)

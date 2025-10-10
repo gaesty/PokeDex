@@ -13,6 +13,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Prometheus;
 
+
 class Program
 {
     static async Task Main(string[] args)

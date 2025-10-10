@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using BourgPalette.Data;
 using BourgPalette.Models;
 using BourgPalette.DTOs;
+using BourgPalette.Metrics;
 
 namespace BourgPalette.Controllers;
 
@@ -39,6 +40,7 @@ public class SpeciesController : ControllerBase
         }
 
         var total = await query.CountAsync(ct);
+    AppMetrics.NumberTotalSpecies.Inc(total);
         var items = await query
             .OrderBy(s => s.Id)
             .Skip((page - 1) * pageSize)

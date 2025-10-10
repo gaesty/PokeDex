@@ -15,12 +15,12 @@ public class WeatherService : IWeatherService
 {
     private readonly HttpClient _http;
     // Metrics
-    private static readonly Counter ExternalRequestsTotal = Metrics.CreateCounter(
+    private static readonly Counter ExternalRequestsTotal = Prometheus.Metrics.CreateCounter(
         "weather_external_requests_total",
         "Total number of external weather API requests",
         new CounterConfiguration { LabelNames = new[] { "outcome" } });
 
-    private static readonly Histogram ExternalRequestDuration = Metrics.CreateHistogram(
+    private static readonly Histogram ExternalRequestDuration = Prometheus.Metrics.CreateHistogram(
         "weather_external_request_duration_seconds",
         "Duration of external weather API requests",
         new HistogramConfiguration
@@ -29,7 +29,7 @@ public class WeatherService : IWeatherService
             Buckets = Histogram.ExponentialBuckets(start: 0.05, factor: 2, count: 10)
         });
 
-    private static readonly Gauge LastResultCount = Metrics.CreateGauge(
+    private static readonly Gauge LastResultCount = Prometheus.Metrics.CreateGauge(
         "weather_last_result_count",
         "Number of weather results returned by the last external weather API call");
     public WeatherService(HttpClient http)

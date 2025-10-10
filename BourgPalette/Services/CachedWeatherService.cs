@@ -14,17 +14,17 @@ public class CachedWeatherService : IWeatherService
     private readonly IDistributedCache _cache;
     private readonly ILogger<CachedWeatherService> _logger;
 
-    private static readonly Counter CacheGetsTotal = Metrics.CreateCounter(
+    private static readonly Counter CacheGetsTotal = Prometheus.Metrics.CreateCounter(
         "weather_cache_gets_total",
         "Total number of cache get attempts for weather data",
         new CounterConfiguration { LabelNames = new[] { "result" } });
 
-    private static readonly Counter CacheSetsTotal = Metrics.CreateCounter(
+    private static readonly Counter CacheSetsTotal = Prometheus.Metrics.CreateCounter(
         "weather_cache_sets_total",
         "Total number of cache set operations for weather data",
         new CounterConfiguration { LabelNames = new[] { "result" } });
 
-    private static readonly Gauge CacheLastTtlSeconds = Metrics.CreateGauge(
+    private static readonly Gauge CacheLastTtlSeconds = Prometheus.Metrics.CreateGauge(
         "weather_cache_last_ttl_seconds",
         "TTL in seconds used for the last cached weather entry");
 
