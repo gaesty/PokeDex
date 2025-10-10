@@ -7,7 +7,6 @@
   - [Docker command](#docker-command)
   - [Collection PostMan](#collection-postman)
   - [Grafana](#grafana)
-  - [Link](#link)
   - [Endpoints utiles](#endpoints-utiles)
   - [Metrics (Prometheus + Grafana)](#metrics-prometheus--grafana)
     - [PromQL – exemples utiles (Prometheus et Grafana)](#promql--exemples-utiles-prometheus-et-grafana)
@@ -15,6 +14,7 @@
     - [Dépannage rapide](#dépannage-rapide)
   - [Base de données – seed (optionnel)](#base-de-données--seed-optionnel)
   - [Ports](#ports)
+  - [Link](#link)
   - [DotNet](#dotnet)
   - [Database](#database)
   - [Diagram](#diagram)
@@ -81,8 +81,6 @@ Copier et coller l'URL du JSON dans l'importation de PostMan
  - Pour mettre à jour le mot de passe \
 `docker exec -ti {grafana_container_name} grafana-cli admin reset-admin-password {new_password}`
 
-## Link
- 
 ## Endpoints utiles
 - `GET /` → message de bienvenue
 - `GET /health` → vérifie la DB
@@ -190,6 +188,8 @@ docker exec -i pokedex-pokedex-db-1 psql -U trainerUser -d pokedex -v ON_ERROR_S
 - Prometheus: 9090
 - Grafana: 3000
 - Redis: 6379
+
+## Link
 
 
 [Tutorial Docker PostgreSQL](https://www.datacamp.com/tutorial/postgresql-docker?dc_referrer=https%3A%2F%2Fwww.google.com%2F)
