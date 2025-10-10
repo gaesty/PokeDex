@@ -1,5 +1,42 @@
 # Cours 
 
+## Table des matières
+- [Cours](#cours)
+  - [Table des matières](#table-des-matières)
+  - [Sujet et stack technique](#sujet-et-stack-technique)
+  - [Docker command](#docker-command)
+  - [Collection PostMan](#collection-postman)
+  - [Grafana](#grafana)
+  - [Link](#link)
+  - [Endpoints utiles](#endpoints-utiles)
+  - [Metrics (Prometheus + Grafana)](#metrics-prometheus--grafana)
+    - [PromQL – exemples utiles (Prometheus et Grafana)](#promql--exemples-utiles-prometheus-et-grafana)
+    - [Idées de panneaux Grafana](#idées-de-panneaux-grafana)
+    - [Dépannage rapide](#dépannage-rapide)
+  - [Base de données – seed (optionnel)](#base-de-données--seed-optionnel)
+  - [Ports](#ports)
+  - [DotNet](#dotnet)
+  - [Database](#database)
+  - [Diagram](#diagram)
+
+## Sujet et stack technique
+Ce projet est une API PokeDex pédagogique qui expose des endpoints sécurisés pour gérer espèces, types, attaques, médias, équipes et un service météo pour bonus/malus.
+
+- Langage et framework: ASP.NET Core 9 (Web API)
+- Authentification: IdentityCore (sans rôles) + JWT Bearer
+- Base de données: PostgreSQL (EF Core 9, Npgsql), migrations automatiques au démarrage
+- Documentation: Swagger/OpenAPI via NSwag
+- Intégrations:
+    - Service météo (Open‑Meteo) + cache (Redis) avec décorateur IDistributedCache
+    - Observabilité: prometheus-net pour métriques /metrics, Prometheus pour scrape, Grafana pour dashboards
+- Conteneurs: Docker/Docker Compose (API, Postgres, Redis, Prometheus, Grafana)
+
+Objectifs pédagogiques:
+- Corriger et unifier le DbContext et les mappings EF/Postgres
+- Sécuriser l’API (JWT) et exposer une doc Swagger exploitable
+- Ajouter un service externe (météo) et le mettre en cache
+- Mettre en place l’observabilité (métriques, scrape, dashboard)
+
 ## Docker command
 
  - Create container with PostgreSQL image 
@@ -45,8 +82,22 @@ Copier et coller l'URL du JSON dans l'importation de PostMan
 `docker exec -ti {grafana_container_name} grafana-cli admin reset-admin-password {new_password}`
 
 ## Link
+ 
+## Endpoints utiles
+- `GET /` → message de bienvenue
+- `GET /health` → vérifie la DB
+- `GET /dbinfo` → info EF/DB
+- `GET /metrics` → endpoint Prometheus
+- `GET /swagger` → Swagger UI
 
-## 📈 Metrics (Prometheus + Grafana)
+Auth:
+- `POST /api/Auth/signup`, `/login`, `/token/refresh`, `/token/revoke`
+
+Métier (JWT requis):
+- `api/species`, `api/types`, `api/abilities`, `api/moves`, `api/media`, `api/teams`, `api/pokedex`
+- Météo: `api/weather/...` (coords ou ville)
+
+## Metrics (Prometheus + Grafana)
 
 L'API expose des métriques Prometheus via `prometheus-net`.
 
@@ -121,6 +172,25 @@ Notes:
 - Grafana → Datasource Prometheus doit pointer vers `http://prometheus:9090` (pas `localhost`).
 - Si le job `PSQL` est `DOWN`, ajoutez un exporter Postgres ou supprimez le job.
 
+## Base de données – seed (optionnel)
+Vérifiez le nom réel du conteneur PostgreSQL via `docker ps` (ex: `pokedex-pokedex-db-1`).
+
+```
+# Copie des scripts
+docker cp .\docker_ressources\01-schema.sql pokedex-pokedex-db-1:/tmp/01-schema.sql
+docker cp .\docker_ressources\02-seed.sql  pokedex-pokedex-db-1:/tmp/02-seed.sql
+
+# Exécution
+docker exec -i pokedex-pokedex-db-1 psql -U trainerUser -d pokedex -v ON_ERROR_STOP=1 -f /tmp/01-schema.sql
+docker exec -i pokedex-pokedex-db-1 psql -U trainerUser -d pokedex -v ON_ERROR_STOP=1 -f /tmp/02-seed.sql
+```
+
+## Ports
+- API: 8080
+- Prometheus: 9090
+- Grafana: 3000
+- Redis: 6379
+
 
 [Tutorial Docker PostgreSQL](https://www.datacamp.com/tutorial/postgresql-docker?dc_referrer=https%3A%2F%2Fwww.google.com%2F)
 
@@ -165,126 +235,147 @@ Notes:
 ## Diagram
 ```mermaid
 flowchart TD
-    %% Client/Test Tools
-    subgraph "Client/Test Tools"
+    subgraph "Clients & Tools"
+        direction TB
         Swagger["Swagger UI"]:::client
         Postman["Postman"]:::client
     end
 
-    %% API Container
-    subgraph "BourgPalette API Container"
+    subgraph "API Container"
         direction TB
-        Program["Program.cs"]:::internal
+        Program["Program.cs"]:::service
+        Middleware["ErrorHandlingMiddleware"]:::service
+        AuthMiddleware["JWT Authentication"]:::service
 
-        subgraph "Middleware Pipeline"
-            ErrorHandling["ErrorHandlingMiddleware"]:::internal
-            Authentication["Authentication & JWT"]:::internal
+        subgraph "Controllers"
+            direction TB
+            Abilities["AbilitiesController"]:::controller
+            AuthC["AuthController"]:::controller
+            CRUD["CRUDController"]:::controller
+            Media["MediaController"]:::controller
+            Moves["MovesController"]:::controller
+            Species["SpeciesController"]:::controller
+            Teams["TeamsController"]:::controller
+            Types["TypesController"]:::controller
+            WeatherC["WeatherController"]:::controller
         end
 
-        subgraph "Controllers Layer"
-            AuthController["AuthController"]:::internal
-            CRUDController["CRUDController"]:::internal
-            AbilitiesController["AbilitiesController"]:::internal
-            SpeciesController["SpeciesController"]:::internal
-            MovesController["MovesController"]:::internal
-            MediaController["MediaController"]:::internal
-            TeamsController["TeamsController"]:::internal
-            TypesController["TypesController"]:::internal
-            WeatherController["WeatherController"]:::internal
-        end
-
-        subgraph "Services Layer"
-            PokeApiImporter["PokeApiImporter"]:::internal
-            WeatherService["WeatherService"]:::internal
-            CachedWeatherService["CachedWeatherService"]:::internal
-            ITokenService["ITokenService"]:::internal
+        subgraph "Services"
+            direction TB
+            IToken["ITokenService"]:::service
+            WeatherSv["WeatherService"]:::service
+            CachedWeather["CachedWeatherService"]:::service
+            PokeImporter["PokeApiImporter"]:::service
         end
 
         subgraph "Data Layer"
-            AppDbContext["ApplicationDbContext"]:::internal
-            DbSeeder["DbSeeder"]:::internal
-            Migrations["Migrations"]:::internal
+            direction TB
+            AppDb["ApplicationDbContext"]:::data
+            DbSeeder["DbSeeder"]:::service
+            DesignFactory["ApplicationDbContextFactory"]:::service
+            Migrations["EF Core Migrations"]:::data
         end
 
-        Health["/health endpoint"]:::internal
-        Metrics["/metrics endpoint"]:::internal
+        subgraph "Config & Metrics"
+            direction TB
+            AppSettings["appsettings.json"]:::config
+            DevSettings["appsettings.Development.json"]:::config
+            MetricsSetup["metrics.cs"]:::service
+        end
     end
 
-    %% Database Container
     subgraph "Database Container"
-        PostgreSQL["PostgreSQL"]:::database
+        direction TB
+        Postgres["PostgreSQL"]:::db
     end
 
-    %% External Services
-    PokeAPI["PokeAPI"]:::external
-    WeatherAPI["Weather API"]:::external
+    subgraph "External Services"
+        direction TB
+        PokeAPI["PokeAPI"]:::external
+        WeatherAPI["Weather API"]:::external
+    end
 
-    %% Monitoring Stack
-    subgraph "Monitoring"
+    subgraph "Monitoring Stack"
+        direction TB
         Prometheus["Prometheus"]:::monitor
         Grafana["Grafana"]:::monitor
     end
 
-    %% Flows
-    Swagger -->|HTTP REST| AuthController
-    Postman -->|HTTP REST| AuthController
+    Swagger -->|HTTP| Program
+    Postman -->|HTTP| Program
 
-    Program --> ErrorHandling
-    ErrorHandling --> Authentication
-    Authentication --> AuthController
+    Program -->|uses| Middleware
+    Middleware -->|auth pipeline| AuthMiddleware
+    AuthMiddleware -->|dispatch| Abilities
+    AuthMiddleware -->|dispatch| AuthC
+    AuthMiddleware -->|dispatch| CRUD
+    AuthMiddleware -->|dispatch| Media
+    AuthMiddleware -->|dispatch| Moves
+    AuthMiddleware -->|dispatch| Species
+    AuthMiddleware -->|dispatch| Teams
+    AuthMiddleware -->|dispatch| Types
+    AuthMiddleware -->|dispatch| WeatherC
 
-    AuthController -->|uses| ITokenService
-    CRUDController -->|uses| PokeApiImporter
-    SpeciesController -->|uses| PokeApiImporter
-    WeatherController -->|uses| WeatherService
-    ControllersLayer -->|calls| ServicesLayer
+    Abilities -->|calls| IToken
+    AuthC -->|calls| IToken
+    CRUD -->|calls| AppDb
+    Media -->|calls| PokeImporter
+    Moves -->|calls| AppDb
+    Species -->|calls| AppDb
+    Teams -->|calls| AppDb
+    Types -->|calls| AppDb
+    WeatherC -->|calls| WeatherSv
 
-    PokeApiImporter -->|HTTP/REST| PokeAPI
-    WeatherService -->|HTTP/REST| WeatherAPI
+    WeatherSv -->|HTTP GET| WeatherAPI
+    WeatherC -->|calls| CachedWeather
+    CachedWeather -->|uses| AppDb
 
-    ServicesLayer -->|DI| AppDbContext
-    AppDbContext -->|EF Core SQL queries| PostgreSQL
+    PokeImporter -->|HTTP GET| PokeAPI
 
-    DbSeeder ---|dashed| PostgreSQL
-    Migrations ---|dashed| PostgreSQL
+    AppDb -->|SQL| Postgres
+    DbSeeder -->|seed| Postgres
+    Migrations -->|migrate| Postgres
+    DesignFactory -->|creates| AppDb
 
-    Prometheus -->|scrape /metrics| Metrics
-    Grafana -->|queries| Prometheus
-
-    Metrics --> Metrics
-    Health --> Health
+    Program -->|exposes /metrics| MetricsSetup
+    Prometheus -->|scrape /metrics| MetricsSetup
+    Grafana -->|query| Prometheus
 
     %% Click Events
     click Program "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Program.cs"
-    click ErrorHandling "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Middleware/ErrorHandlingMiddleware.cs"
-    click AuthController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/AuthController.cs"
-    click CRUDController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/CRUDController.cs"
-    click AbilitiesController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/AbilitiesController.cs"
-    click SpeciesController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/SpeciesController.cs"
-    click MovesController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/MovesController.cs"
-    click MediaController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/MediaController.cs"
-    click TeamsController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/TeamsController.cs"
-    click TypesController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/TypesController.cs"
-    click WeatherController "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/WeatherController.cs"
-    click PokeApiImporter "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/PokeApiImporter.cs"
-    click WeatherService "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/WeatherService.cs"
-    click CachedWeatherService "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/CachedWeatherService.cs"
-    click ITokenService "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/ITokenService.cs"
-    click AppDbContext "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Data/ApplicationDbContext.cs"
+    click Abilities "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/AbilitiesController.cs"
+    click AuthC "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/AuthController.cs"
+    click CRUD "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/CRUDController.cs"
+    click Media "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/MediaController.cs"
+    click Moves "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/MovesController.cs"
+    click Species "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/SpeciesController.cs"
+    click Teams "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/TeamsController.cs"
+    click Types "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/TypesController.cs"
+    click WeatherC "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Controllers/WeatherController.cs"
+    click IToken "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/ITokenService.cs"
+    click WeatherSv "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/WeatherService.cs"
+    click CachedWeather "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/CachedWeatherService.cs"
+    click PokeImporter "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Services/PokeApiImporter.cs"
+    click AppDb "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Data/ApplicationDbContext.cs"
     click DbSeeder "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Data/DbSeeder.cs"
-    click Migrations "https://github.com/gaesty/pokedex/tree/main/BourgPalette/Migrations"
-    click Swagger "https://github.com/gaesty/pokedex/blob/main/swagger.json"
-    click Postman "https://github.com/gaesty/pokedex/tree/main/Postman collection"
-    click PostgreSQL "https://github.com/gaesty/pokedex/blob/main/docker-compose.yml"
+    click DesignFactory "https://github.com/gaesty/pokedex/blob/main/BourgPalette/Data/DesignTime/ApplicationDbContextFactory.cs"
+    click Migrations "https://github.com/gaesty/pokedex/tree/main/BourgPalette/Migrations/"
+    click MetricsSetup "https://github.com/gaesty/pokedex/blob/main/BourgPalette/metrics/metrics.cs"
+    click AppSettings "https://github.com/gaesty/pokedex/blob/main/BourgPalette/appsettings.json"
+    click DevSettings "https://github.com/gaesty/pokedex/blob/main/BourgPalette/appsettings.Development.json"
+    click Postgres "https://github.com/gaesty/pokedex/blob/main/docker-compose.yml"
     click Prometheus "https://github.com/gaesty/pokedex/blob/main/prometheus.yml"
     click Grafana "https://github.com/gaesty/pokedex/blob/main/docker-compose.yml"
-    click Program "https://github.com/gaesty/pokedex/tree/main/Dockerfile"
+    click Swagger "https://github.com/gaesty/pokedex/blob/main/PokeDex API v1.postman_test_run.json"
+    click Postman "https://github.com/gaesty/pokedex/blob/main/PokeDex API v1.postman_test_run.json"
 
     %% Styles
-    classDef client fill:#D3D3F5,stroke:#6E6ED0,color:#000
-    classDef internal fill:#E0F0FF,stroke:#3399FF,color:#000
-    classDef database fill:#DFFFE0,stroke:#33CC33,color:#000
-    classDef external fill:#F0F0F0,stroke:#AAAAAA,color:#000
-    classDef monitor fill:#FFE5CC,stroke:#FF9933,color:#000
-
+    classDef controller fill:#D0E8FF,stroke:#3399FF;
+    classDef service fill:#E8F4D0,stroke:#66CC33;
+    classDef data fill:#D0F0D8,stroke:#33CC66;
+    classDef db fill:#D0FFD8,stroke:#33AA33,stroke-dasharray: 5 5;
+    classDef external fill:#F0F0F0,stroke:#999999,stroke-dasharray: 2 2;
+    classDef monitor fill:#FFE8A0,stroke:#FFAA33;
+    classDef client fill:#E8D0FF,stroke:#AA33FF;
+    classDef config fill:#FFF4D0,stroke:#CC9900;
 ```
